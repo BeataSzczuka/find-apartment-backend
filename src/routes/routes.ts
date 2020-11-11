@@ -12,12 +12,16 @@ export class ApartmentRoutes {
             this.ApartmentController.createApartment(req, res);
         });
 
-        app.get('/api/apartments/:id', (req: Request, res: Response) => {
-            this.ApartmentController.getApartment(req, res);
+        app.get('/api/apartments/:id', (req, res: Response) => {
+            this.ApartmentController.getApartment(req.params.id, res);
         });
 
         app.get('/api/apartments', (req: Request, res: Response) => {
             this.ApartmentController.getAllApartments(req, res);
+        });
+
+        app.delete('/api/apartments', (req: Request, res: Response) => {
+            this.ApartmentController.deleteAllApartments(res);
         });
     }
 }

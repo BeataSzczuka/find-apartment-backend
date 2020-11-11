@@ -1,3 +1,4 @@
+import { callbackify } from "util";
 import { IApartment } from "../models/apartment-model";
 import apartments from '../schemas/apartment-schema';
 
@@ -7,11 +8,15 @@ export default class ApartmentService {
         _session.save(callback);
     }
 
-    public getApartment(query: any, callback: any) {
-        apartments.findOne(query, callback);
+    public getApartment(id: string, callback: any) {
+        apartments.findById(id, callback);
     }
 
     public getAllApartments(callback: any) {
         apartments.find({}, callback)
+    }
+
+    public deleteAllApartments(callback: any) {
+        apartments.deleteMany({}, callback)
     }
 }
