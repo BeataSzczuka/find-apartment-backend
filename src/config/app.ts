@@ -1,18 +1,20 @@
 import { Application }from "express";
-import { ApartmentRoutes } from '../routes/routes';
+import { Routes } from '../routes/routes';
 import * as bodyParser from "body-parser";
 
 const express = require("express");
 const mongoose = require("mongoose");
+const dotenv = require("dotenv");
 
 class App {
     public app: Application;
     public databaseUrl: string = 'mongodb://localhost/find-apartment-db';
     
-    private routes: ApartmentRoutes = new ApartmentRoutes(); 
+    private routes: Routes = new Routes(); 
     constructor() {
         this.app = express();
         this.config();
+        dotenv.config();
         this.setupMongoDB();
         this.routes.route(this.app);
     }
