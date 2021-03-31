@@ -1,15 +1,33 @@
-import { callbackify } from "util";
+import { IApartmentUser } from "models/apartment-user-model";
 import { IApartment } from "../models/apartment-model";
 import apartments from '../schemas/apartment-schema';
+import users from '../schemas/user-schema';
 
 export default class ApartmentService {
-    public createApartment(params: IApartment, callback: any) {
-        const _session = new apartments(params);
-        _session.save(callback);
+    public createApartment(params: IApartment, userId: String, callback: any) {
+        // const _session = new apartments({...params, author: userId, publicationDate: new Date()});
+        // _session.save(callback);
+
+
+        apartments.create({...params, author: userId, publicationDate: new Date()})
+            .then(async (apartment: IApartment)=>{
+                await users.findByIdAndUpdate(userId, {$push: {apartments: apartment._id}}, {new: true});
+                return apartment;
+            })
+            .then((data: any) => callback(null, data))
+            .catch((err: any) => callback(err));
+
     }
 
     public getApartment(id: string, callback: any) {
-        apartments.findById(id, callback);
+        apartments.findById(id, async function(err: any, data: IApartmentUser){
+            if (!err) {
+                const author = await users.findById(data.author);
+                data.phoneNumber = author.phoneNumber;
+                data.email = author.email;
+            } 
+            callback(err, data);
+        });
     }
 
     public getAllApartments(callback: any) {

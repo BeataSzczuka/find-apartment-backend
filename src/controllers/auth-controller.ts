@@ -1,4 +1,5 @@
 import { Request, Response } from 'express';
+import { IUser } from 'models/user-model';
 import AuthService from '../services/auth-service';
 import * as responses from '../services/response-service'
 
@@ -30,6 +31,15 @@ export class AuthController {
                 responses.mongoError(err, res);
             } else {
                 responses.successResponse('user logged out successfully', data, res);
+            }
+        });
+    }
+    public getUser(id: string, res: Response) {
+        this.authService.getUser(id, (err: any, user_data: IUser) => {
+            if (err) {
+                responses.mongoError(err, res);
+            } else {
+                responses.successResponse('returns user by id', user_data, res);
             }
         });
     }

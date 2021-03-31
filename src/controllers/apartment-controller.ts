@@ -2,13 +2,20 @@ import ApartmentService from '../services/apartment-service';
 import { IApartment } from '../models/apartment-model';
 import { Request, Response } from 'express';
 import * as responses from '../services/response-service'
+import { IApartmentUser } from 'models/apartment-user-model';
+const jwt = require('jsonwebtoken');
 
 export class ApartmentController {
     private apartmentService: ApartmentService = new ApartmentService();
 
+
+
     public createApartment(req: Request, res: Response) {
         const params: IApartment = req.body;
-        this.apartmentService.createApartment(params, (err: any, user_data: IApartment) => {
+        var token = req.headers.authorization;
+        const {userId} = jwt.verify(token, process.env.JWT_SECRET);
+
+        this.apartmentService.createApartment(params, userId, (err: any, user_data: IApartment) => {
             if (err) {
                 responses.mongoError(err, res);
             } else {
@@ -17,7 +24,7 @@ export class ApartmentController {
         });
     }
     public getApartment(id: string, res: Response) {
-        this.apartmentService.getApartment(id, (err: any, user_data: IApartment) => {
+        this.apartmentService.getApartment(id, (err: any, user_data: IApartmentUser) => {
             if (err) {
                 responses.mongoError(err, res);
             } else {

@@ -1,3 +1,4 @@
+import { IUser } from "models/user-model";
 import { callbackify } from "util";
 import userSchema from "../schemas/user-schema";
 import users from '../schemas/user-schema';
@@ -15,17 +16,21 @@ async function validatePassword(password: string, passwordHash: string) {
 export default class AuthService {
     public async createUser(req: any, callback: any) {
         try{
-        const {email, password, role} = req.body;
-        const passwordHash = await createPasswordHash(password);
-        const user = new users({email, password: passwordHash, role: role || "basic"});
-        const accessToken = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
-            expiresIn: "1d"
-        });
-        user.accessToken = accessToken;
-        await user.save(callback);
-    }catch (error){
-        callback(error);
+            const {email, password, phoneNumber, role} = req.body;
+            const passwordHash = await createPasswordHash(password);
+            const user = new users({email, phoneNumber, password: passwordHash, role: role || "basic"});
+            const accessToken = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
+                expiresIn: "1d"
+            });
+            user.accessToken = accessToken;
+            await user.save(callback);
+        }catch (error){
+            callback(error);
+        }
     }
+
+    public getUser(id: string, callback: any) {
+        users.findById(id, callback)
     }
 
     public async login(req: any, callback: any) {
@@ -55,11 +60,9 @@ export default class AuthService {
             var token = req.headers.authorization;
             const {userId, exp} = jwt.verify(token, process.env.JWT_SECRET);
             const loggedInUser = await userSchema.findById(userId);
-            console.log(loggedInUser);
             await users.findByIdAndUpdate(loggedInUser._id, { accessToken: null });
             callback();
        } catch (error) {
-           console.log(error);
         callback(new Error('Bad Request'))
        }
     }

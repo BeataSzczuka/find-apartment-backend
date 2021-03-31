@@ -8,10 +8,18 @@ const schema = new Schema({
         trim: true,
         unique: true
     },
+    phoneNumber: {
+        type: String,
+        required: true
+    },
     password: {
         type: String,
         required: true
     },
+    apartments: [{
+        type: Schema.Types.ObjectId,
+        ref: "apartments"
+    }],
     role: {
         type: String,
         default: 'basic',

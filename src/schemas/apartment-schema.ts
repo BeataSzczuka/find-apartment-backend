@@ -2,11 +2,18 @@ const mongoose = require('mongoose')
 const Schema = mongoose.Schema;
 
 const schema = new Schema({
-    title: String,
-    price: Number,
-    propertySize: Number,
-    location: String,
     description: String,
+    location: String,
+    propertySize: Number,
+    price: Number,
+    transactionType: String,
+    publicationDate: Date,
+    phoneNumber: String,
+    email: String,
+    author: {
+        type: Schema.Types.ObjectId,
+        ref: "users"
+    },
     isDeleted: {
         type: Boolean,
         default: false

@@ -19,5 +19,9 @@ export class UserRoutes {
         app.post('/api/users/logout', (req: Request, res: Response) => {
             this.authController.logout(req, res);
         });
+
+        app.get('/api/users/:id', (req: Request, res: Response) => {
+            this.authController.getUser(req.params.id, res);
+        });
     }
 }
