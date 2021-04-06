@@ -4,16 +4,24 @@ import { Request, Response } from 'express';
 import * as responses from '../services/response-service'
 import { IApartmentUser } from 'models/apartment-user-model';
 const jwt = require('jsonwebtoken');
+var fs = require('fs');
 
 export class ApartmentController {
     private apartmentService: ApartmentService = new ApartmentService();
 
 
 
-    public createApartment(req: Request, res: Response) {
-        const params: IApartment = req.body;
+    public createApartment(req: any, res: Response) {
+        const params: IApartment = JSON.parse(req.body.upload);
+        console.log(req.files);
         var token = req.headers.authorization;
         const {userId} = jwt.verify(token, process.env.JWT_SECRET);
+       
+        params.images = [];
+        req.files.forEach((file: any ) => {
+            let image = {data: fs.readFileSync(file.path), contentType: 'image/jpg'};
+            params.images.push(image);
+        });
 
         this.apartmentService.createApartment(params, userId, (err: any, user_data: IApartment) => {
             if (err) {
@@ -33,7 +41,7 @@ export class ApartmentController {
         });
     }
     public getAllApartments(req: Request, res: Response) {
-        this.apartmentService.getAllApartments((err: any, user_data: IApartment) => {
+        this.apartmentService.getAllApartments((err: any, user_data: IApartment[]) => {
             if (err) {
                 responses.mongoError(err, res);
             } else {

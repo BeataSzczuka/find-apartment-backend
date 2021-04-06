@@ -5,13 +5,10 @@ import users from '../schemas/user-schema';
 
 export default class ApartmentService {
     public createApartment(params: IApartment, userId: String, callback: any) {
-        // const _session = new apartments({...params, author: userId, publicationDate: new Date()});
-        // _session.save(callback);
-
 
         apartments.create({...params, author: userId, publicationDate: new Date()})
             .then(async (apartment: IApartment)=>{
-                await users.findByIdAndUpdate(userId, {$push: {apartments: apartment._id}}, {new: true});
+               await users.findByIdAndUpdate(userId, {$push: {apartments: apartment._id}}, {new: true});
                 return apartment;
             })
             .then((data: any) => callback(null, data))

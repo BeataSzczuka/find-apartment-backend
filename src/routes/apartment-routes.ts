@@ -4,15 +4,43 @@ import { authMiddleware } from '../custom-middlewares/auth-middleware';
 import { IUserRequest } from 'models/user-request-model';
 import { ApartmentController } from '../controllers/apartment-controller';
 
+const multer = require('multer');
+const path = require('path');
+const crypto = require('crypto');
+
 export class ApartmentRoutes {
 
     private ApartmentController: ApartmentController = new ApartmentController();
 
+
+    private storage = multer.diskStorage({
+        destination: './uploads/',
+        filename: function(req: any, file: any, cb: any) {
+          return crypto.pseudoRandomBytes(16, function(err: any, raw: any) {
+            if (err) {
+              return cb(err);
+            }
+            return cb(null, "" + (raw.toString('hex')) + (path.extname(file.originalname)));
+          });
+        }
+      });
+
     public route(app: Application) {
         
-        app.post('/api/apartments',authMiddleware, (req: Request, res: Response) => {
-            this.ApartmentController.createApartment(req, res);
-        });
+        // app.post('/api/apartments',authMiddleware, (req: any, res: Response) => {
+        //     console.log("POST APARTMENT");
+        //     console.log(req);
+        //     this.ApartmentController.createApartment(req, res);
+        // });
+        
+        app.post("/api/upload", multer({
+              storage: this.storage
+            }).array('uploads'), (req: any, res) => {
+            //   res.redirect("/uploads/" + req.file.filename);
+            //   console.log(req.file.filename);
+              this.ApartmentController.createApartment(req, res);
+            });
+
 
         app.get('/api/apartments/:id', (req, res: Response) => {
             this.ApartmentController.getApartment(req.params.id, res);

@@ -14,6 +14,9 @@ const schema = new Schema({
         type: Schema.Types.ObjectId,
         ref: "users"
     },
+    images: [{
+        data: Buffer, contentType: String
+    }],
     isDeleted: {
         type: Boolean,
         default: false

@@ -6,4 +6,5 @@ export interface IApartment {
     price: number;
     transactionType: String;
     isDeleted?: Boolean;
+    images: any[];
 }
