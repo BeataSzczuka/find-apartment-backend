@@ -5,6 +5,7 @@ export interface IApartment {
     propertySize: number;
     price: number;
     transactionType: String;
+    isAuthor: Boolean;
     isDeleted?: Boolean;
     images: any[];
 }

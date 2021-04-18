@@ -27,31 +27,27 @@ export class ApartmentRoutes {
 
     public route(app: Application) {
         
-        // app.post('/api/apartments',authMiddleware, (req: any, res: Response) => {
-        //     console.log("POST APARTMENT");
-        //     console.log(req);
-        //     this.ApartmentController.createApartment(req, res);
-        // });
-        
         app.post("/api/upload", multer({
               storage: this.storage
             }).array('uploads'), (req: any, res) => {
-            //   res.redirect("/uploads/" + req.file.filename);
-            //   console.log(req.file.filename);
               this.ApartmentController.createApartment(req, res);
             });
 
 
-        app.get('/api/apartments/:id', (req, res: Response) => {
-            this.ApartmentController.getApartment(req.params.id, res);
+        app.get('/api/apartments/:id', (req: any, res: Response) => {
+            this.ApartmentController.getApartment(req.params.id, req, res);
         });
         
         app.get('/api/apartments', (req: Request, res: Response) => {
             this.ApartmentController.getAllApartments(req, res);
         });
 
-        app.delete('/api/apartments', (req: Request, res: Response) => {
-            this.ApartmentController.deleteAllApartments(res);
+        app.delete('/api/apartments/:id', (req: Request, res: Response) => {
+            this.ApartmentController.deleteApartment(req.params.id, req, res);
         });
+
+        app.delete('/api/apartments', (req: Request, res: Response) => {
+          this.ApartmentController.deleteAllApartments(res);
+      });
     }
 }

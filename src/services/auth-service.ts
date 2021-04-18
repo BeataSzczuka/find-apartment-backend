@@ -58,13 +58,12 @@ export default class AuthService {
     public async logout(req: any, callback: any) {
         try{
             var token = req.headers.authorization;
-            console.log(req);
             const {userId, exp} = jwt.verify(token, process.env.JWT_SECRET);
             const loggedInUser = await userSchema.findById(userId);
             await users.findByIdAndUpdate(loggedInUser._id, { accessToken: null });
             callback();
        } catch (error) {
-        callback(new Error('Bad Request'))
+        callback()
        }
     }
 }

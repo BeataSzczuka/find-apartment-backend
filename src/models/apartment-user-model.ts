@@ -9,5 +9,6 @@ export interface IApartmentUser {
     phoneNumber: String;
     author: String;
     email: String;
+    isAuthor: Boolean;
     isDeleted?: Boolean;
-}
+};

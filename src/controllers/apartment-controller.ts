@@ -13,7 +13,6 @@ export class ApartmentController {
 
     public createApartment(req: any, res: Response) {
         const params: IApartment = JSON.parse(req.body.upload);
-        console.log(req.files);
         var token = req.headers.authorization;
         const {userId} = jwt.verify(token, process.env.JWT_SECRET);
        
@@ -31,8 +30,14 @@ export class ApartmentController {
             }
         });
     }
-    public getApartment(id: string, res: Response) {
-        this.apartmentService.getApartment(id, (err: any, user_data: IApartmentUser) => {
+    public getApartment(id: string, req: any, res: Response) {
+        var token = req.headers.authorization;
+        let user = null;
+        if (token != undefined) {
+            const {userId} = jwt.verify(token, process.env.JWT_SECRET);
+            user = userId;
+        }
+        this.apartmentService.getApartment(id, user, (err: any, user_data: IApartmentUser) => {
             if (err) {
                 responses.mongoError(err, res);
             } else {
@@ -61,8 +66,10 @@ export class ApartmentController {
         )
     }
 
-    public deleteApartment(res: Response){
-        this.apartmentService.deleteAllApartments((err: any, user_data: IApartment) => {
+    public deleteApartment(id: string, req: any, res: Response){
+        var token = req.headers.authorization;
+        const {userId} = jwt.verify(token, process.env.JWT_SECRET);
+        this.apartmentService.deleteApartment(id, userId, (err: any, user_data: IApartment) => {
                 if (err) {
                     responses.mongoError(err, res);
                 } else {
