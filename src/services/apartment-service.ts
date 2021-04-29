@@ -1,7 +1,7 @@
 import { IApartmentUser } from "models/apartment-user-model";
 import { IApartment } from "../models/apartment-model";
-import apartments from '../schemas/apartment-schema';
 import users from '../schemas/user-schema';
+import apartments from '../schemas/apartment-schema';
 var mongodb = require('mongodb');
 
 export default class ApartmentService {

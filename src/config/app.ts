@@ -7,7 +7,7 @@ const dotenv = require("dotenv");
 const bodyParser = require("body-parser");
 class App {
     public app: Application;
-    public databaseUrl: string = 'mongodb://localhost/find-apartment-db';
+    public databaseUrl: string = process.env.MONGODB_URI || 'mongodb://localhost/find-apartment-db';
     
     private routes: Routes = new Routes(); 
     constructor() {
@@ -18,7 +18,7 @@ class App {
         this.routes.route(this.app);
     }
 
-    private setupMongoDB(){
+    private async setupMongoDB(){
         mongoose.connect(this.databaseUrl,  { useNewUrlParser: true, useUnifiedTopology: true, useCreateIndex: true, useFindAndModify: false })
     }
 

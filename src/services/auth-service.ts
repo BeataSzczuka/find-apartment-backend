@@ -4,7 +4,6 @@ import userSchema from "../schemas/user-schema";
 import users from '../schemas/user-schema';
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken'); 
-//const User = require('../schemas/user-schema');
 
 async function createPasswordHash(passwd: string) {
     return await bcrypt.hash(passwd, 10);
