@@ -3,6 +3,7 @@ import { IApartment } from "../models/apartment-model";
 import users from '../schemas/user-schema';
 import apartments from '../schemas/apartment-schema';
 var mongodb = require('mongodb');
+const url = require('url');
 
 export default class ApartmentService {
     public createApartment(params: IApartment, userId: String, callback: any) {
@@ -33,12 +34,27 @@ export default class ApartmentService {
         });
     }
 
-    public getAllApartments(callback: any) {
-        apartments.find({}, callback)
+    public getAllApartments(req: any, callback: any) {
+        const queryObject = url.parse(req.url,true).query;
+
+        apartments.find({})
+            .limit(parseInt(queryObject.pageSize))
+            .skip(parseInt(queryObject.page) * parseInt(queryObject.pageSize))
+            .sort({publicationDate: "desc"})
+            .exec(function(err: any, result: any) {
+                apartments.countDocuments().exec(function(err: any, count: any) {
+                    const allApartmentsResult = {
+                        apartments: result,
+                        page: queryObject.page,
+                        pages: Math.ceil(count / queryObject.pageSize)
+                    };
+                    callback(err, allApartmentsResult);
+                })
+    })
     }
 
     public deleteAllApartments(callback: any) {
-        apartments.deleteMany({}, callback)
+        apartments.deleteMany({}, callback);
     }
 
     public deleteApartment(id: string, user:any, callback: any) {

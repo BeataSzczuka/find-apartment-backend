@@ -38,7 +38,7 @@ export class ApartmentRoutes {
             this.ApartmentController.getApartment(req.params.id, req, res);
         });
         
-        app.get('/api/apartments', (req: Request, res: Response) => {
+        app.get('/api/apartments', (req: any, res: Response) => {
             this.ApartmentController.getAllApartments(req, res);
         });
 

@@ -45,8 +45,8 @@ export class ApartmentController {
             }
         });
     }
-    public getAllApartments(req: Request, res: Response) {
-        this.apartmentService.getAllApartments((err: any, user_data: IApartment[]) => {
+    public getAllApartments(req: any, res: Response) {
+        this.apartmentService.getAllApartments(req, (err: any, user_data: IApartment[]) => {
             if (err) {
                 responses.mongoError(err, res);
             } else {
