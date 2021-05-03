@@ -26,7 +26,7 @@ export default class ApartmentService {
                 const author = await users.findById(data.author);
                 result.phoneNumber = author.phoneNumber;
                 result.email = author.email;
-                if (data.author == user) {
+                if (user != null && data.author == user) {
                     result.isAuthor = true;
                 } 
             } 
@@ -37,10 +37,14 @@ export default class ApartmentService {
     public getAllApartments(req: any, callback: any) {
         const queryObject = url.parse(req.url,true).query;
 
-        apartments.find({})
+        apartments.find({
+            price: this.getPriceRange(queryObject.priceFrom, queryObject.priceTo),
+            propertySize: this.getSizeRange(queryObject.propertySizeFrom, queryObject.propertySizeTo),
+            location: { $regex: new RegExp(queryObject.location ? queryObject.location : "", 'i') }
+        })
             .limit(parseInt(queryObject.pageSize))
             .skip(parseInt(queryObject.page) * parseInt(queryObject.pageSize))
-            .sort({publicationDate: "desc"})
+            .sort(this.getSortMethod(queryObject.sort))
             .exec(function(err: any, result: any) {
                 apartments.countDocuments().exec(function(err: any, count: any) {
                     const allApartmentsResult = {
@@ -51,6 +55,23 @@ export default class ApartmentService {
                     callback(err, allApartmentsResult);
                 })
     })
+    }
+
+    public getOnlyMyApartments(req: any, user: any, callback: any) {
+
+        // apartments.find({"author": user})
+        //     .limit(parseInt(queryObject.pageSize))
+        //     .skip(parseInt(queryObject.page) * parseInt(queryObject.pageSize))
+        //     .sort({publicationDate: "desc"})
+        //     .exec(function(err: any, result: any) {
+        //         apartments.countDocuments().exec(function(err: any, count: any) {
+        //             const allApartmentsResult = {
+        //                 apartments: result,
+        //                 page: queryObject.page,
+        //                 pages: Math.ceil(count / queryObject.pageSize)
+        //             };
+        //             callback(err, allApartmentsResult);
+        //         })
     }
 
     public deleteAllApartments(callback: any) {
@@ -65,5 +86,37 @@ export default class ApartmentService {
                 callback(err);
             }
         });
+    }
+
+    private getSortMethod(querySortMethod: string) {
+        if (querySortMethod === "PRICE_ASC") {
+            return {price: "asc"};
+        } else if (querySortMethod === "PRICE_DSC") {
+            return {price: "desc"};
+        } else {
+            return {publicationDate: "desc"};
+        }
+    }
+
+    private getPriceRange(queryPriceFrom: string, queryPriceTo: string) {
+        let price: any = { $gte: "0" };
+        if (queryPriceFrom) {
+            price.$gte = queryPriceFrom;
+        }
+        if (queryPriceTo) {
+            price.$gte = queryPriceTo;
+        }
+        return price;
+    }
+
+    private getSizeRange(queryPropSizeFrom: string, queryPropSizeTo: string) {
+        let propertySize: any = { $gte: "0" };
+        if (queryPropSizeFrom) {
+            propertySize.$gte = queryPropSizeFrom;
+        }
+        if (queryPropSizeTo) {
+            propertySize.$gte = queryPropSizeTo;
+        }
+        return propertySize;
     }
 }

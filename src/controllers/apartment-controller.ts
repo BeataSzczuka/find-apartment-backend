@@ -14,7 +14,7 @@ export class ApartmentController {
     public createApartment(req: any, res: Response) {
         const params: IApartment = JSON.parse(req.body.upload);
         var token = req.headers.authorization;
-        const {userId} = jwt.verify(token, process.env.JWT_SECRET);
+        const userId = this.getUserByToken(token, res);
        
         params.images = [];
         req.files.forEach((file: any ) => {
@@ -33,9 +33,8 @@ export class ApartmentController {
     public getApartment(id: string, req: any, res: Response) {
         var token = req.headers.authorization;
         let user = null;
-        if (token != undefined) {
-            const {userId} = jwt.verify(token, process.env.JWT_SECRET);
-            user = userId;
+        if (token) {
+            user = this.getUserByToken(token, res);
         }
         this.apartmentService.getApartment(id, user, (err: any, user_data: IApartmentUser) => {
             if (err) {
@@ -68,7 +67,7 @@ export class ApartmentController {
 
     public deleteApartment(id: string, req: any, res: Response){
         var token = req.headers.authorization;
-        const {userId} = jwt.verify(token, process.env.JWT_SECRET);
+        const userId = this.getUserByToken(token, res);
         this.apartmentService.deleteApartment(id, userId, (err: any, user_data: IApartment) => {
                 if (err) {
                     responses.mongoError(err, res);
@@ -77,5 +76,18 @@ export class ApartmentController {
                 }
             }
         )
+    }
+
+    private getUserByToken(token: string, res: Response) {
+        if (token != undefined) {
+            try {
+                const {userId} = jwt.verify(token, process.env.JWT_SECRET);
+                return userId;
+            } catch  (err) {
+                if (err instanceof jwt.TokenExpiredError) {
+                    return res.status(400).send("TokenExpired");
+                }
+            }
+        }
     }
 }
