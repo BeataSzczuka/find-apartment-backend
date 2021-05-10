@@ -34,14 +34,24 @@ export default class ApartmentService {
         });
     }
 
-    public getAllApartments(req: any, callback: any) {
+    public getAllApartments(req: any, user: any, callback: any) {
         const queryObject = url.parse(req.url,true).query;
 
-        apartments.find({
+        const query: any = {
             price: this.getPriceRange(queryObject.priceFrom, queryObject.priceTo),
             propertySize: this.getSizeRange(queryObject.propertySizeFrom, queryObject.propertySizeTo),
             location: { $regex: new RegExp(queryObject.location ? queryObject.location : "", 'i') }
-        })
+        };
+
+        if (queryObject.onlyMy != null && user != null) {
+            query.author = user;
+        }
+
+        if (queryObject.transactionType != null) {
+            query.transactionType = queryObject.transactionType
+        }
+
+        apartments.find(query)
             .limit(parseInt(queryObject.pageSize))
             .skip(parseInt(queryObject.page) * parseInt(queryObject.pageSize))
             .sort(this.getSortMethod(queryObject.sort))
@@ -55,23 +65,6 @@ export default class ApartmentService {
                     callback(err, allApartmentsResult);
                 })
     })
-    }
-
-    public getOnlyMyApartments(req: any, user: any, callback: any) {
-
-        // apartments.find({"author": user})
-        //     .limit(parseInt(queryObject.pageSize))
-        //     .skip(parseInt(queryObject.page) * parseInt(queryObject.pageSize))
-        //     .sort({publicationDate: "desc"})
-        //     .exec(function(err: any, result: any) {
-        //         apartments.countDocuments().exec(function(err: any, count: any) {
-        //             const allApartmentsResult = {
-        //                 apartments: result,
-        //                 page: queryObject.page,
-        //                 pages: Math.ceil(count / queryObject.pageSize)
-        //             };
-        //             callback(err, allApartmentsResult);
-        //         })
     }
 
     public deleteAllApartments(callback: any) {
@@ -91,7 +84,7 @@ export default class ApartmentService {
     private getSortMethod(querySortMethod: string) {
         if (querySortMethod === "PRICE_ASC") {
             return {price: "asc"};
-        } else if (querySortMethod === "PRICE_DSC") {
+        } else if (querySortMethod === "PRICE_DESC") {
             return {price: "desc"};
         } else {
             return {publicationDate: "desc"};
@@ -104,7 +97,7 @@ export default class ApartmentService {
             price.$gte = queryPriceFrom;
         }
         if (queryPriceTo) {
-            price.$gte = queryPriceTo;
+            price.$lte = queryPriceTo;
         }
         return price;
     }
@@ -115,8 +108,9 @@ export default class ApartmentService {
             propertySize.$gte = queryPropSizeFrom;
         }
         if (queryPropSizeTo) {
-            propertySize.$gte = queryPropSizeTo;
+            propertySize.$lte = queryPropSizeTo;
         }
         return propertySize;
     }
+
 }

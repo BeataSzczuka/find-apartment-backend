@@ -45,7 +45,12 @@ export class ApartmentController {
         });
     }
     public getAllApartments(req: any, res: Response) {
-        this.apartmentService.getAllApartments(req, (err: any, user_data: IApartment[]) => {
+        var token = req.headers.authorization;
+        let user = null;
+        if (token) {
+            user = this.getUserByToken(token, res);
+        }
+        this.apartmentService.getAllApartments(req, user, (err: any, user_data: IApartment[]) => {
             if (err) {
                 responses.mongoError(err, res);
             } else {
