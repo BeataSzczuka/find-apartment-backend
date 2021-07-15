@@ -30,6 +30,27 @@ export class ApartmentController {
             }
         });
     }
+
+    public updateApartment(id: string, req: any, res: Response) {
+        const params: IApartment = JSON.parse(req.body);
+        var token = req.headers.authorization;
+        const userId = this.getUserByToken(token, res);
+       
+        params.images = [];
+        req.files.forEach((file: any ) => {
+            let image = {data: fs.readFileSync(file.path), contentType: 'image/jpg'};
+            params.images.push(image);
+        });
+
+        this.apartmentService.updateApartment(id, params, userId, (err: any, user_data: IApartment) => {
+            if (err) {
+                responses.mongoError(err, res);
+            } else {
+                responses.successResponse('apartment created successfully', user_data, res);
+            }
+        });
+    }
+
     public getApartment(id: string, req: any, res: Response) {
         var token = req.headers.authorization;
         let user = null;

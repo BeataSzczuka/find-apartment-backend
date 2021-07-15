@@ -26,6 +26,12 @@ export class ApartmentRoutes {
       });
 
     public route(app: Application) {
+
+        app.put("/api/update/:id", multer({
+          storage: this.storage
+        }).array('uploads'), (req: any, res) => {
+          this.ApartmentController.updateApartment(req.params.id, req, res);
+        });
         
         app.post("/api/upload", multer({
               storage: this.storage
@@ -48,6 +54,9 @@ export class ApartmentRoutes {
 
         app.delete('/api/apartments', (req: Request, res: Response) => {
           this.ApartmentController.deleteAllApartments(res);
+
+        
+
       });
     }
 }

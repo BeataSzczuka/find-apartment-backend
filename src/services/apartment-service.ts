@@ -18,6 +18,15 @@ export default class ApartmentService {
 
     }
 
+
+    public updateApartment(id: string, params: IApartment, userId: String, callback: any) {
+
+        apartments.findByIdAndUpdate(id, {$set: {...params}}, {upsert: false})
+            .then((data: any) => callback(null, data))
+            .catch((err: any) => callback(err));
+
+    }
+
     public getApartment(id: string, user:any, callback: any) {
         apartments.findById(id, async function(err: any, data: any){
             let result;
