@@ -12,13 +12,13 @@ export class ApartmentController {
 
 
     public createApartment(req: any, res: Response) {
-        const params: IApartment = JSON.parse(req.body.upload);
+        const params: IApartment = JSON.parse(JSON.stringify(req.body));
         var token = req.headers.authorization;
         const userId = this.getUserByToken(token, res);
        
         params.images = [];
         req.files.forEach((file: any ) => {
-            let image = {data: fs.readFileSync(file.path), contentType: 'image/jpg'};
+            let image = {data: file.buffer, contentType: 'image/jpg'};
             params.images.push(image);
         });
 

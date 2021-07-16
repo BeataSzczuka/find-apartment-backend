@@ -13,23 +13,25 @@ export class ApartmentRoutes {
     private ApartmentController: ApartmentController = new ApartmentController();
 
 
-    private storage = multer.diskStorage({
-        destination: './uploads/',
-        filename: function(req: any, file: any, cb: any) {
-          return crypto.pseudoRandomBytes(16, function(err: any, raw: any) {
-            if (err) {
-              return cb(err);
-            }
-            return cb(null, "" + (raw.toString('hex')) + (path.extname(file.originalname)));
-          });
-        }
-      });
+    // private storage = multer.diskStorage({
+    //     destination: './uploads/',
+    //     filename: function(req: any, file: any, cb: any) {
+    //       return crypto.pseudoRandomBytes(16, function(err: any, raw: any) {
+    //         if (err) {
+    //           return cb(err);
+    //         }
+    //         return cb(null, "" + (raw.toString('hex')) + (path.extname(file.originalname)));
+    //       });
+    //     }
+    //   });
+
+    private storage = multer.memoryStorage();
 
     public route(app: Application) {
 
         app.put("/api/update/:id", multer({
           storage: this.storage
-        }).array('uploads'), (req: any, res) => {
+        }).array('uploads', 6), (req: any, res) => {
           this.ApartmentController.updateApartment(req.params.id, req, res);
         });
         
