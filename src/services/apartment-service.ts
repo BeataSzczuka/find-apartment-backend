@@ -7,7 +7,6 @@ const url = require('url');
 
 export default class ApartmentService {
     public createApartment(params: IApartment, userId: String, callback: any) {
-
         apartments.create({...params, author: userId, publicationDate: new Date()})
             .then(async (apartment: IApartment)=>{
                await users.findByIdAndUpdate(userId, {$push: {apartments: apartment._id}}, {new: true});

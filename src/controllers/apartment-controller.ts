@@ -12,14 +12,22 @@ export class ApartmentController {
 
 
     public createApartment(req: any, res: Response) {
-        const params: IApartment = JSON.parse(JSON.stringify(req.body));
+        const params: IApartment = {
+            description: req.body.description,
+            location: req.body.location,
+            propertySize: req.body.propertySize,
+            price: req.body.price,
+            transactionType: req.body.transactionType,
+            images: []
+        } ;
+        //JSON.parse(JSON.stringify(req.body));
         var token = req.headers.authorization;
         const userId = this.getUserByToken(token, res);
        
         params.images = [];
         req.files.forEach((file: any ) => {
             let image = {data: file.buffer, contentType: 'image/jpg'};
-            params.images.push(image);
+           params.images.push(image);
         });
 
         this.apartmentService.createApartment(params, userId, (err: any, user_data: IApartment) => {
