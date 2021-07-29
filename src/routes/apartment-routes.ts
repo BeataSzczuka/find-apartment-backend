@@ -41,6 +41,9 @@ export class ApartmentRoutes {
               this.ApartmentController.createApartment(req, res);
             });
 
+        app.get('/api/apartments/filter-ranges', (req: Request, res: Response) => {
+          this.ApartmentController.getFilterRanges(res);       
+        });
 
         app.get('/api/apartments/:id', (req: any, res: Response) => {
             this.ApartmentController.getApartment(req.params.id, req, res);
@@ -54,11 +57,12 @@ export class ApartmentRoutes {
             this.ApartmentController.deleteApartment(req.params.id, req, res);
         });
 
+        app.post('/api/restoreapartment/:id', (req: Request, res: Response) => {
+          this.ApartmentController.restoreApartment(req.params.id, req, res);
+        });
+
         app.delete('/api/apartments', (req: Request, res: Response) => {
-          this.ApartmentController.deleteAllApartments(res);
-
-        
-
-      });
+          this.ApartmentController.deleteAllApartments(res);       
+        });
     }
 }
