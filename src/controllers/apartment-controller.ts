@@ -4,16 +4,16 @@ import { Request, Response } from 'express';
 import * as responses from '../services/response-service'
 import { IApartmentUser } from 'models/apartment-user-model';
 import { IFilterRanges } from 'models/filter-ranges-model';
+import { uploadImage } from '../helpers/helpers';
 const jwt = require('jsonwebtoken');
 var fs = require('fs');
+
 
 export class ApartmentController {
     private apartmentService: ApartmentService = new ApartmentService();
 
-
-
-    public createApartment(req: any, res: Response) {
-        const body = JSON.parse(req.body.upload);
+    public async createApartment(req: any, res: Response) {
+        const body = JSON.parse(JSON.parse(JSON.stringify(req.body)).upload);
         const params: IApartment = {
             description: body.description,
             location: body.location,
@@ -26,63 +26,76 @@ export class ApartmentController {
         const userId = this.getUserByToken(token, res);
        
         params.images = [];
-        req.files.forEach((file: any ) => {
-            let image = {data: file.buffer, contentType: 'image/jpg'};
-           params.images.push(image);
+        const promises: Promise<String>[] = [];
+        let exception = null;
+        req.files.forEach(async (file: any ) => {
+            try {
+                const myFile = file
+                promises.push( uploadImage(myFile) );
+         
+            } catch (error) {
+                exception = error;
+                responses.mongoError(error, res);
+                return;
+            }
         });
-
-        this.apartmentService.createApartment(params, userId, (err: any, user_data: IApartment) => {
+        Promise.all(promises)
+        .then((values: String[]) => {
+            params.images = values.map((value: String) => ({filename: value, contentType: 'image/jpg'}));
+            this.apartmentService.createApartment(params, userId, (err: any, user_data: IApartment) => {
             if (err) {
                 responses.mongoError(err, res);
             } else {
                 responses.successResponse('Ogłoszenie zostało dodane', user_data, res);
             }
         });
+        })
+        .catch((e)=> {
+            responses.mongoError(e, res);
+         });
     }
 
     public updateApartment(id: string, req: any, res: Response) {
-        const body = JSON.parse(req.body.upload);
+        const body = JSON.parse(JSON.parse(JSON.stringify(req.body)).upload);
         const params: IApartment = {
             description: body.description,
             location: body.location,
             propertySize: body.propertySize,
             price: body.price,
             transactionType: body.transactionType,
-            images: []
+            images: body.unchangedImages.map((value: String) => ({filename: value, contentType: 'image/jpg'}))
         } ;
         var token = req.headers.authorization;
         const userId = this.getUserByToken(token, res);
        
-        params.images = [];
-        req.files.forEach((file: any ) => {
-            let image = {data: file.buffer, contentType: 'image/jpg'};
-           params.images.push(image);
-        });
-
-        this.apartmentService.updateApartment(id, params, userId, (err: any, user_data: IApartment) => {
-            if (err) {
-                responses.mongoError(err, res);
-            } else {
-                responses.successResponse('Ogłoszenie zostało zaktualizowane', user_data, res);
+        const promises: Promise<String>[] = [];
+        req.files.forEach(async (file: any ) => {
+            try {
+                const myFile = file
+                promises.push( uploadImage(myFile) );
+         
+            } catch (error) {
+                responses.mongoError(error, res);
+                return;
             }
         });
-        // const params: IApartment = JSON.parse(req.body);
-        // var token = req.headers.authorization;
-        // const userId = this.getUserByToken(token, res);
-       
-        // params.images = [];
-        // req.files.forEach((file: any ) => {
-        //     let image = {data: fs.readFileSync(file.path), contentType: 'image/jpg'};
-        //     params.images.push(image);
-        // });
 
-        // this.apartmentService.updateApartment(id, params, userId, (err: any, user_data: IApartment) => {
-        //     if (err) {
-        //         responses.mongoError(err, res);
-        //     } else {
-        //         responses.successResponse('apartment created successfully', user_data, res);
-        //     }
-        // });
+        Promise.all(promises)
+        .then((values: String[]) => {
+            params.images = params.images.concat( values.map((value: String) => ({filename: value, contentType: 'image/jpg'})) );
+            this.apartmentService.updateApartment(id, params, userId, (err: any, user_data: IApartment) => {
+                if (err) {
+                    responses.mongoError(err, res);
+                } else {
+                    responses.successResponse('Ogłoszenie zostało zaktualizowane', user_data, res);
+                }
+            });
+        })
+        .catch((e)=> {
+            responses.mongoError(e, res);
+         });
+
+
     }
 
     public getApartment(id: string, req: any, res: Response) {

@@ -8,36 +8,29 @@ const multer = require('multer');
 const path = require('path');
 const crypto = require('crypto');
 
+var aws = require('aws-sdk')
+var multerS3 = require('multer-s3')
+
 export class ApartmentRoutes {
 
     private ApartmentController: ApartmentController = new ApartmentController();
 
 
-    // private storage = multer.diskStorage({
-    //     destination: './uploads/',
-    //     filename: function(req: any, file: any, cb: any) {
-    //       return crypto.pseudoRandomBytes(16, function(err: any, raw: any) {
-    //         if (err) {
-    //           return cb(err);
-    //         }
-    //         return cb(null, "" + (raw.toString('hex')) + (path.extname(file.originalname)));
-    //       });
-    //     }
-    //   });
-
-    private storage = multer.memoryStorage();
+    private multerMid = multer({
+      storage: multer.memoryStorage(),
+      limits: {
+        fileSize: 5 * 1024 * 1024,
+      },
+    })
 
     public route(app: Application) {
 
-        app.put("/api/update/:id", multer({
-          storage: this.storage
-        }).array('uploads', 6), (req: any, res) => {
+        app.put("/api/update/:id", this.multerMid.array('uploads', 6), (req: any, res) => {
           this.ApartmentController.updateApartment(req.params.id, req, res);
         });
+
         
-        app.post("/api/upload", multer({
-              storage: this.storage
-            }).array('uploads'), (req: any, res) => {
+        app.post("/api/upload", this.multerMid.array('uploads', 6), (req: any, res) => {
               this.ApartmentController.createApartment(req, res);
             });
 

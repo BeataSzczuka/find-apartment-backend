@@ -13,7 +13,7 @@ export default class ApartmentService {
                await users.findByIdAndUpdate(userId, {$push: {apartments: apartment._id}}, {new: true});
                 return apartment;
             })
-            .then((data: any) => callback(null, data))
+            .then((data: any) => {callback(null, data);})
             .catch((err: any) => callback(err));
 
     }
@@ -70,7 +70,6 @@ export default class ApartmentService {
             amount = count;
         });
 
-        console.log(queryObject);
 
         apartments.find(query).limit(parseInt(queryObject.pageSize))
             .skip(parseInt(queryObject.page) * parseInt(queryObject.pageSize))

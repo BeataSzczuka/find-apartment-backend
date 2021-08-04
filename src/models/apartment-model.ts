@@ -8,4 +8,5 @@ export interface IApartment {
     isAuthor?: Boolean;
     isDeleted?: Boolean;
     images: any[];
+    unchangedImages?: String[];
 }

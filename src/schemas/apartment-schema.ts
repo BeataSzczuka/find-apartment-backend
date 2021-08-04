@@ -15,7 +15,7 @@ const schema = new Schema({
         ref: "users"
     },
     images: [{
-        data: Buffer, contentType: String
+        filename: String, contentType: String
     }],
     isDeleted: {
         type: Boolean,
