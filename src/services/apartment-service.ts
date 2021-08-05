@@ -3,6 +3,7 @@ import { IApartment } from "../models/apartment-model";
 import users from '../schemas/user-schema';
 import apartments from '../schemas/apartment-schema';
 import { IFilterRanges } from "models/filter-ranges-model";
+import { IUser } from "models/user-model";
 var mongodb = require('mongodb');
 const url = require('url');
 
@@ -29,17 +30,23 @@ export default class ApartmentService {
 
     public getApartment(id: string, user:any, callback: any) {
         apartments.findById(id, async function(err: any, data: any){
-            let result;
             if (!err) {
-                result = Object.assign({isAuthor: false}, data._doc);
-                const author = await users.findById(data.author);
-                result.phoneNumber = author.phoneNumber;
-                result.email = author.email;
-                if (user != null && data.author == user) {
-                    result.isAuthor = true;
-                } 
-            } 
-            callback(err, result);
+                let result = Object.assign({isAuthor: false}, data._doc);
+                users.findById(data.author)
+                    .then((author: any) => {
+                        result.phoneNumber = author.phoneNumber;
+                        result.email = author.email;
+                        if (user != null && data.author == user) {
+                            result.isAuthor = true;
+                        } 
+                        callback(err, result);
+                    })
+                    .catch(( e: any ) => {
+                        callback(e, null);
+                    });
+            } else {
+                callback(err, null);
+            }
         });
     }
 

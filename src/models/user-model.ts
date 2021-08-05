@@ -2,7 +2,7 @@ export interface IUser {
   email: String,
   password: String,
   role: Roles,
-  accessToken: String
+  accessToken: String,
 }
 
 enum Roles {
