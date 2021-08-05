@@ -6,7 +6,7 @@ import { IApartmentUser } from 'models/apartment-user-model';
 import { IFilterRanges } from 'models/filter-ranges-model';
 import { uploadImage } from '../helpers/helpers';
 const jwt = require('jsonwebtoken');
-var fs = require('fs');
+const url = require('url');
 
 
 export class ApartmentController {
@@ -23,36 +23,43 @@ export class ApartmentController {
             images: []
         } ;
         var token = req.headers.authorization;
-        const userId = this.getUserByToken(token, res);
+        this.getUserByToken(token, (err: any, userId: string) => {
+            if (err != null) {
+                responses.unauthorizedResponse(err, res);
+            }
+            else {
+                params.images = [];
+                const promises: Promise<String>[] = [];
+                let exception = null;
+                req.files.forEach(async (file: any ) => {
+                    try {
+                        const myFile = file
+                        promises.push( uploadImage(myFile) );
+                
+                    } catch (error) {
+                        exception = error;
+                        responses.mongoError(error, res);
+                        return;
+                    }
+                });
+                Promise.all(promises)
+                .then((values: String[]) => {
+                    params.images = values.map((value: String) => ({filename: value, contentType: 'image/jpg'}));
+                    this.apartmentService.createApartment(params, userId, (err: any, user_data: IApartment) => {
+                    if (err) {
+                        responses.mongoError(err, res);
+                    } else {
+                        responses.successResponse('Ogłoszenie zostało dodane', user_data, res);
+                    }
+                });
+                })
+                .catch((e)=> {
+                    responses.mongoError(e, res);
+                });
+            }
+        });
        
-        params.images = [];
-        const promises: Promise<String>[] = [];
-        let exception = null;
-        req.files.forEach(async (file: any ) => {
-            try {
-                const myFile = file
-                promises.push( uploadImage(myFile) );
-         
-            } catch (error) {
-                exception = error;
-                responses.mongoError(error, res);
-                return;
-            }
-        });
-        Promise.all(promises)
-        .then((values: String[]) => {
-            params.images = values.map((value: String) => ({filename: value, contentType: 'image/jpg'}));
-            this.apartmentService.createApartment(params, userId, (err: any, user_data: IApartment) => {
-            if (err) {
-                responses.mongoError(err, res);
-            } else {
-                responses.successResponse('Ogłoszenie zostało dodane', user_data, res);
-            }
-        });
-        })
-        .catch((e)=> {
-            responses.mongoError(e, res);
-         });
+        
     }
 
     public updateApartment(id: string, req: any, res: Response) {
@@ -66,45 +73,43 @@ export class ApartmentController {
             images: body.unchangedImages.map((value: String) => ({filename: value, contentType: 'image/jpg'}))
         } ;
         var token = req.headers.authorization;
-        const userId = this.getUserByToken(token, res);
-       
-        const promises: Promise<String>[] = [];
-        req.files.forEach(async (file: any ) => {
-            try {
-                const myFile = file
-                promises.push( uploadImage(myFile) );
-         
-            } catch (error) {
-                responses.mongoError(error, res);
-                return;
+        this.getUserByToken(token, (err: any, userId: string) => {
+            if (err != null) {
+                responses.unauthorizedResponse(err, res);
+            }
+            else {
+                const promises: Promise<String>[] = [];
+                req.files.forEach(async (file: any ) => {
+                    try {
+                        const myFile = file
+                        promises.push( uploadImage(myFile) );
+                 
+                    } catch (error) {
+                        responses.mongoError(error, res);
+                        return;
+                    }
+                });
+        
+                Promise.all(promises)
+                .then((values: String[]) => {
+                    params.images = params.images.concat( values.map((value: String) => ({filename: value, contentType: 'image/jpg'})) );
+                    this.apartmentService.updateApartment(id, params, userId, (err: any, user_data: IApartment) => {
+                        if (err) {
+                            responses.mongoError(err, res);
+                        } else {
+                            responses.successResponse('Ogłoszenie zostało zaktualizowane', user_data, res);
+                        }
+                    });
+                })
+                .catch((e)=> {
+                    responses.mongoError(e, res);
+                 });
             }
         });
-
-        Promise.all(promises)
-        .then((values: String[]) => {
-            params.images = params.images.concat( values.map((value: String) => ({filename: value, contentType: 'image/jpg'})) );
-            this.apartmentService.updateApartment(id, params, userId, (err: any, user_data: IApartment) => {
-                if (err) {
-                    responses.mongoError(err, res);
-                } else {
-                    responses.successResponse('Ogłoszenie zostało zaktualizowane', user_data, res);
-                }
-            });
-        })
-        .catch((e)=> {
-            responses.mongoError(e, res);
-         });
-
-
     }
 
     public getApartment(id: string, req: any, res: Response) {
-        var token = req.headers.authorization;
-        let user = null;
-        if (token) {
-            user = this.getUserByToken(token, res);
-        }
-        this.apartmentService.getApartment(id, user, (err: any, user_data: IApartmentUser) => {
+        this.apartmentService.getApartment(id, (err: any, user_data: IApartmentUser) => {
             if (err) {
                 responses.mongoError(err, res);
             } else {
@@ -114,17 +119,33 @@ export class ApartmentController {
     }
     public getAllApartments(req: any, res: Response) {
         var token = req.headers.authorization;
-        let user = null;
-        if (token) {
-            user = this.getUserByToken(token, res);
+        const hasOnlyMyParam = url.parse(req.url,true).query.onlyMy;
+        if (token && hasOnlyMyParam) {
+            this.getUserByToken(token, (err: any, userId: string) => {
+                if (err != null) {
+                    responses.unauthorizedResponse(err, res);
+                }
+                else {
+                    this.apartmentService.getAllApartments(req, userId, (err: any, user_data: IApartment[]) => {
+                        if (err) {
+                            responses.mongoError(err, res);
+                        } else {
+                            responses.successResponse('returns all apartments', user_data, res);
+                        }
+                    });
+                }
+
+            });
+        } else {
+            this.apartmentService.getAllApartments(req, null, (err: any, user_data: IApartment[]) => {
+                if (err) {
+                    responses.mongoError(err, res);
+                } else {
+                    responses.successResponse('returns all apartments', user_data, res);
+                }
+            });
         }
-        this.apartmentService.getAllApartments(req, user, (err: any, user_data: IApartment[]) => {
-            if (err) {
-                responses.mongoError(err, res);
-            } else {
-                responses.successResponse('returns all apartments', user_data, res);
-            }
-        });
+       
     }
 
     public deleteAllApartments(res: Response){
@@ -140,28 +161,41 @@ export class ApartmentController {
 
     public deleteApartment(id: string, req: any, res: Response){
         var token = req.headers.authorization;
-        const userId = this.getUserByToken(token, res);
-        this.apartmentService.deleteApartment(id, userId, (err: any, user_data: IApartment) => {
-                if (err) {
-                    responses.mongoError(err, res);
-                } else {
-                    responses.successResponse('Ogłoszenie zostało usunięte', user_data, res);
-                }
+        this.getUserByToken(token, (err: any, userId: string) => {
+            if (err != null) {
+                responses.unauthorizedResponse(err, res);
             }
-        )
+            else {
+                this.apartmentService.deleteApartment(id, userId, (err: any, user_data: IApartment) => {
+                    if (err) {
+                        responses.mongoError(err, res);
+                    } else {
+                        responses.successResponse('Ogłoszenie zostało usunięte', user_data, res);
+                    }
+                }
+            );
+            }
+        });
+        
     }
 
     public restoreApartment(id: string, req: any, res: Response){
         var token = req.headers.authorization;
-        const userId = this.getUserByToken(token, res);
-        this.apartmentService.restoreApartment(id, userId, (err: any, user_data: IApartment) => {
-                if (err) {
-                    responses.mongoError(err, res);
-                } else {
-                    responses.successResponse('Ogłoszenie zostało przywrócone', user_data, res);
-                }
+        this.getUserByToken(token, (err: any, userId: string) => {
+            if (err != null) {
+                responses.unauthorizedResponse(err, res);
             }
-        )
+            else {
+                this.apartmentService.restoreApartment(id, userId, (err: any, user_data: IApartment) => {
+                    if (err) {
+                        responses.mongoError(err, res);
+                    } else {
+                        responses.successResponse('Ogłoszenie zostało przywrócone', user_data, res);
+                    }
+                }
+            )
+            }
+        });       
     }
 
 
@@ -175,16 +209,14 @@ export class ApartmentController {
         });
     }
 
-    private getUserByToken(token: string, res: Response) {
+    private getUserByToken(token: string, callback: any) {
         if (token != undefined) {
             try {
                 const {userId} = jwt.verify(token, process.env.JWT_SECRET);
-                return userId;
+                return callback(null, userId);
             } catch  (err) {
-                if (err instanceof jwt.TokenExpiredError) {
-                    return res.status(400).send("TokenExpired");
-                }
+                return callback("Unauthorized", null);
             }
-        } else return res.status(400).send("Unauthorized");
+        } else return callback("Unauthorized", null);
     }
 }

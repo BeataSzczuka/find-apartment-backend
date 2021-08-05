@@ -16,3 +16,11 @@ export function mongoError(err: any, res: Response) {
         data: err
     });
 }
+
+export function unauthorizedResponse(err: any, res: Response) {
+    res.status(responseStatuses.badRequest).json({
+        status: 'failure',
+        message: 'Unauthorized',
+        data: err
+    });
+}

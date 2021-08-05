@@ -28,7 +28,7 @@ export default class ApartmentService {
 
     }
 
-    public getApartment(id: string, user:any, callback: any) {
+    public getApartment(id: string, callback: any) {
         apartments.findById(id, async function(err: any, data: any){
             if (!err) {
                 let result = Object.assign({isAuthor: false}, data._doc);
@@ -36,9 +36,6 @@ export default class ApartmentService {
                     .then((author: any) => {
                         result.phoneNumber = author.phoneNumber;
                         result.email = author.email;
-                        if (user != null && data.author == user) {
-                            result.isAuthor = true;
-                        } 
                         callback(err, result);
                     })
                     .catch(( e: any ) => {
